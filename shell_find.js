@@ -34,8 +34,13 @@ var shellFind = {
 
   exec: function(callback) {
     exec(this.command(), this.options, function(err, stdout, stderr) {
-      if(err) {
-        return callback(stderr);
+      if(stderr) {
+        var lines = stderr.split('\n');
+        lines.forEach(function(line) {
+          if(line.length > 0 && line.indexOf('find: File system loop detected;') !== 0) {
+            return callback(stderr);
+          }
+        });
       }
 
       var files = stdout.split('\n');
