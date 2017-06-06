@@ -1,69 +1,84 @@
-var exec = require('child_process').exec;
-var escape = require('shell-escape');
+'use strict';
 
-var shellFind = {
+const exec = require('child_process').exec;
+const escape = require('shell-escape');
 
-  name: function(pattern) {
-    this._command.push('-name', pattern);
-    return this;
-  },
+const shellFind = {
 
-  prune: function(pattern) {
-    this._command.unshift('-name', pattern, '-prune', '-o');
-    return this;
-  },
+    name: function (pattern) {
+        this._command.push('-name', pattern);
 
-  newer: function(filepath) {
-    this._command.push('-newer', filepath);
-    return this;
-  },
+        return this;
+    },
 
-  type: function(filetype) {
-    this._command.push('-type', filetype[0]);
-    return this;
-  },
+    prune: function (pattern) {
+        this._command.unshift('-name', pattern, '-prune', '-o');
 
-  command: function() {
-    return escape(['find', this.rootDir].concat(this._command, '-print'));
-  },
-  
-  follow: function() {
-    this._command.push('-follow');
-    return this;
-  },
+        return this;
+    },
 
-  exec: function(callback) {
-    exec(this.command(), this.options, function(err, stdout, stderr) {
-      if(stderr) {
-        var lines = stderr.split('\n');
-        lines.forEach(function(line) {
-          if(line.length > 0 && line.indexOf('find: File system loop detected;') !== 0) {
-            return callback(stderr);
-          }
+    newer: function (filepath) {
+        this._command.push('-newer', filepath);
+
+        return this;
+    },
+
+    type: function (filetype) {
+        this._command.push('-type', filetype[0]);
+
+        return this;
+    },
+
+    command: function () {
+        return escape(['find', this.rootDir].concat(this._command, '-print'));
+    },
+
+    follow: function () {
+        this._command.push('-follow');
+
+        return this;
+    },
+
+    exec: function (callback) {
+        exec(this.command(), this.options, (err, stdout, stderr) => {
+            if (stderr) {
+                const lines = stderr.split('\n');
+                let error;
+                lines.forEach((line) => {
+                    if (line.length > 0 && line.indexOf('find: File system loop detected;') !== 0) {
+                        error = stderr;
+                    }
+                });
+                if (error) {
+                    return callback(error);
+                }
+            }
+
+            const files = stdout.split('\n');
+            if (files[files.length - 1] === '') {
+                files.pop(); // trailing newline
+            }
+
+            return callback(null, files);
         });
-      }
-
-      var files = stdout.split('\n');
-      if(files[files.length-1] === '') {
-        files.pop(); // trailing newline
-      }
-      callback(null, files);
-    });
-  }
+    },
 };
 
-module.exports = function(rootDir, options) {
-  var finder = Object.create(shellFind);
-  finder._command = [];
-  finder.rootDir = '.';
-  finder.options = options;
-  switch (typeof rootDir) {
-    case 'string':
-      finder.rootDir = rootDir;
-      break;
-    case 'object':
-      finder.options = rootDir;
-      break;
-  }
-  return finder;
+module.exports = function (rootDir, options) {
+    const finder = Object.create(shellFind);
+    finder._command = [];
+    finder.rootDir = '.';
+    finder.options = options;
+    switch (typeof rootDir) {
+        case 'string':
+            finder.rootDir = rootDir;
+            break;
+        case 'object':
+            finder.options = rootDir;
+            break;
+        default:
+            break;
+    }
+
+    return finder;
 };
