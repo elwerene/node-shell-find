@@ -87,7 +87,10 @@ module.exports = function (rootDir, options) {
         default:
             break;
     }
-    finder.options.LANG = 'C';
+    if (finder.options.env === undefined) {
+        finder.options.env = {};
+    }
+    finder.options.env.LANG = 'C';
 
     return finder;
 };
