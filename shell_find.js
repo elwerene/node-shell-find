@@ -69,6 +69,14 @@ module.exports = function (rootDir, options) {
     finder._command = [];
     finder.rootDir = '.';
     finder.options = options;
+    switch (typeof options) {
+        case 'object':
+            finder.options = options;
+            break;
+        default:
+            finder.options = {};
+            break;
+    }
     switch (typeof rootDir) {
         case 'string':
             finder.rootDir = rootDir;
@@ -79,6 +87,7 @@ module.exports = function (rootDir, options) {
         default:
             break;
     }
+    finder.options.LANG = 'C';
 
     return finder;
 };

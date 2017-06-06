@@ -1,6 +1,6 @@
 {
   "name": "shell-find",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Node bindings for shell find utility",
   "main": "shell_find.js",
   "scripts": {
